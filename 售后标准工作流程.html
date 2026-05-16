@@ -5,6 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>售后标准工作流程</title>
 
+<script>
+  /* 立即加，确保 CSS 隐藏样式同步生效，避免首屏闪烁 */
+  document.documentElement.classList.add('has-reveal');
+</script>
+
 <style>
   :root {
     --primary: #0066cc;
@@ -53,6 +58,7 @@
     letter-spacing: -0.374px;
     color: var(--ink);
     background: var(--canvas);
+    overflow-x: hidden;
   }
 
   /* ───────── Global nav ───────── */
@@ -65,7 +71,8 @@
     height: var(--nav-h);
     display: flex;
     align-items: center;
-    padding: 0 24px;
+    gap: 14px;
+    padding: 0 16px 0 12px;
   }
   .global-nav-brand {
     font-family: var(--font-text);
@@ -73,6 +80,54 @@
     line-height: 1;
     letter-spacing: -0.12px;
     color: #fff;
+  }
+  .nav-toggle {
+    display: none;
+    background: transparent;
+    border: 0;
+    padding: 8px;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 4px;
+    border-radius: var(--r-sm);
+  }
+  .nav-toggle span {
+    display: block;
+    width: 16px;
+    height: 1.5px;
+    background: #fff;
+    border-radius: 2px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  .nav-toggle[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(5.5px) rotate(45deg);
+  }
+  .nav-toggle[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+  }
+  .nav-toggle[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-5.5px) rotate(-45deg);
+  }
+
+  /* Overlay for drawer */
+  .nav-overlay {
+    display: none;
+    position: fixed;
+    inset: var(--nav-h) 0 0 0;
+    background: rgba(0, 0, 0, 0.32);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 90;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  .nav-overlay.open {
+    display: block;
+    opacity: 1;
   }
 
   /* ───────── Doc layout ───────── */
@@ -155,15 +210,23 @@
 
   /* Main */
   .content {
-    padding: var(--s-xxl) var(--s-section);
+    padding: 0;
+    min-width: 0;
   }
-  .content-inner { max-width: var(--content-max); }
+  .content-inner {
+    max-width: none;
+    min-width: 0;
+  }
 
   /* ───────── Doc header ───────── */
   .doc-header {
-    padding-bottom: var(--s-xl);
-    border-bottom: 1px solid var(--hairline);
-    margin-bottom: var(--s-xxl);
+    padding: 80px var(--s-section) 8px;
+    background: var(--canvas);
+  }
+  .doc-header > * {
+    max-width: var(--content-max);
+    margin-left: auto;
+    margin-right: auto;
   }
   .eyebrow {
     font-family: var(--font-text);
@@ -185,9 +248,36 @@
   }
 
   /* ───────── Sections ───────── */
-  section {
-    margin-bottom: var(--s-xxl);
+  main section {
+    padding: 72px var(--s-section);
+    margin: 0;
     scroll-margin-top: calc(var(--nav-h) + 24px);
+    background: var(--canvas);
+  }
+  main section > * {
+    max-width: var(--content-max);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  /* 章节背景交替：偶数 section 用 parchment */
+  main section:nth-of-type(even) {
+    background: var(--parchment);
+  }
+  /* 卡片 surface 永远与章节背景反色 */
+  main section:nth-of-type(even) .flow-canvas,
+  main section:nth-of-type(even) .tbl,
+  main section:nth-of-type(even) .notice,
+  main section:nth-of-type(even) .sub-block {
+    background: var(--canvas);
+  }
+  /* 流程图右滑提示渐变的起点跟随容器底色 */
+  main section:nth-of-type(even) .scroll-hint-pill {
+    background: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(174, 174, 178, 0.10) 55%,
+      rgba(174, 174, 178, 0.22) 100%
+    );
   }
   h2 {
     font-family: var(--font-display);
@@ -228,20 +318,59 @@
     background: var(--parchment);
     border-radius: var(--r-lg);
     padding: 36px 28px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+    position: relative;
+    overflow: hidden;
   }
-  .flow-canvas::-webkit-scrollbar { height: 8px; }
-  .flow-canvas::-webkit-scrollbar-track { background: transparent; }
-  .flow-canvas::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 999px; }
+
+  /* 右边缘竖排提示条：轻浅渐变 + 仿宋竖排"右滑查看" */
+  .scroll-hint-pill {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(
+      to right,
+      rgba(245, 245, 247, 0) 0%,
+      rgba(174, 174, 178, 0.10) 55%,
+      rgba(174, 174, 178, 0.22) 100%
+    );
+    z-index: 3;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .scroll-hint-pill .hint-text {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-family: "FangSong", "STFangsong", "FangSong_GB2312", "Songti SC", "STSong", serif;
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ink-48);
+    letter-spacing: 0.18em;
+    white-space: nowrap;
+  }
+  .flow-canvas.has-overflow:not(.at-end) .scroll-hint-pill {
+    opacity: 1;
+  }
 
   .flow {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     gap: 0;
-    min-width: 100%;
+    width: 100%;
     font-family: var(--font-text);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
+  .flow::-webkit-scrollbar { height: 6px; }
+  .flow::-webkit-scrollbar-track { background: transparent; }
+  .flow::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 999px; }
 
   /* Step (node) */
   .step {
@@ -551,35 +680,120 @@
   }
   ul.points li:first-child { border-top: none; }
 
+  /* ───────── Reveal on scroll ───────── */
+  .has-reveal .doc-header,
+  .has-reveal main section {
+    opacity: 0;
+    transform: translateY(24px);
+    transition: opacity 0.85s cubic-bezier(0.32, 0.72, 0, 1),
+                transform 0.85s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: opacity, transform;
+  }
+  .has-reveal .doc-header.is-in,
+  .has-reveal main section.is-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .has-reveal .doc-header,
+    .has-reveal main section {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
   /* ───────── Responsive ───────── */
   @media (max-width: 1024px) {
-    .doc { grid-template-columns: 240px 1fr; }
+    :root { --sidebar-w: 240px; }
     .content { padding: var(--s-xl) var(--s-xxl); }
   }
+
+  /* ── Tablet & mobile: sidebar 抽屉 + 流程图保持横向 ── */
   @media (max-width: 833px) {
-    :root { --sidebar-w: 100%; }
     .doc { grid-template-columns: 1fr; }
+    .nav-toggle { display: inline-flex; }
+
     .sidebar {
-      position: static;
-      height: auto;
-      border-right: none;
-      border-bottom: 1px solid var(--hairline);
-      padding: var(--s-lg) 0;
+      position: fixed;
+      top: var(--nav-h);
+      left: 0;
+      width: 280px;
+      max-width: 84vw;
+      height: calc(100vh - var(--nav-h));
+      z-index: 95;
+      transform: translateX(-100%);
+      transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+      border-right: 1px solid var(--hairline);
+      box-shadow: 0 0 0 transparent;
     }
-    .content { padding: var(--s-xl) var(--s-lg); }
-    .flow-canvas { padding: 24px 20px; }
+    .sidebar.open {
+      transform: translateX(0);
+      box-shadow: 12px 0 32px rgba(0, 0, 0, 0.08);
+    }
+
+    .content { padding: 0; max-width: 100%; }
+    .doc-header { padding: 48px var(--s-lg) 8px; }
+    main section { padding: 48px var(--s-lg); }
+    .doc-header h1 { font-size: 30px; }
+    h2 { font-size: 24px; }
+    h3 { font-size: 18px; margin-top: var(--s-lg); }
+    section { margin-bottom: var(--s-xl); }
+    p { font-size: 16px; }
+
+    /* 流程图保持横向 + 右滑提示 */
+    .flow-canvas { padding: 22px 14px; }
+    .step { padding: 8px 13px; font-size: 13.5px; }
+    .step--stack .step-sub { font-size: 11px; }
+    .line { width: 22px; margin: 0 3px; }
+    .line--long { width: 32px; }
+    .branch-label, .path-tag { font-size: 10.5px; min-width: 30px; margin-left: 4px; margin-right: 4px; }
+    .path-tag--wide { min-width: 70px; }
+    .branches, .paths { gap: 8px; padding-left: 12px; }
+    .merge { width: 12px; height: 56px; }
+    .merge--tall { height: 80px; }
+
+    th, td { padding: 10px 12px; font-size: 14px; }
+    th { font-size: 11px; padding: 9px 12px; }
+  }
+
+  /* ── 小屏手机 ── */
+  @media (max-width: 480px) {
+    .global-nav { padding: 0 12px 0 6px; gap: 8px; }
+    .doc-header { padding: 32px var(--s-md) 4px; }
+    main section { padding: 32px var(--s-md); }
+    .doc-header h1 { font-size: 26px; }
+    h2 { font-size: 21px; }
+    h3 { font-size: 17px; }
+    p { font-size: 15.5px; line-height: 1.55; }
+    .doc-brand { font-size: 18px; }
+
+    .flow-canvas { padding: 18px 12px; border-radius: var(--r-md); }
+    .scroll-hint-pill { width: 32px; }
+    .scroll-hint-pill .hint-text { font-size: 12px; right: 8px; letter-spacing: 0.16em; }
+    .step { padding: 7px 11px; font-size: 13px; }
+    .line { width: 18px; }
+
+    th, td { padding: 9px 10px; font-size: 13px; }
+    th { font-size: 10.5px; }
+    .tbl { border-radius: var(--r-md); }
   }
 </style>
 </head>
 <body>
 
 <nav class="global-nav">
+  <button class="nav-toggle" id="navToggle" aria-label="目录" aria-controls="sidebar" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
   <span class="global-nav-brand">售后 SOP · 内部文档</span>
 </nav>
 
+<div class="nav-overlay" id="navOverlay"></div>
+
 <div class="doc">
 
-  <aside class="sidebar">
+  <aside class="sidebar" id="sidebar">
     <div class="sidebar-inner">
       <div class="doc-brand">售后 SOP</div>
       <div class="doc-version">v2 · 2026-05</div>
@@ -953,6 +1167,114 @@
     </div>
   </main>
 </div>
+
+<script>
+  (function () {
+    var toggle = document.getElementById('navToggle');
+    var sidebar = document.getElementById('sidebar');
+    var overlay = document.getElementById('navOverlay');
+    if (!toggle || !sidebar || !overlay) return;
+
+    function setOpen(open) {
+      sidebar.classList.toggle('open', open);
+      overlay.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+      document.body.style.overflow = open ? 'hidden' : '';
+    }
+
+    toggle.addEventListener('click', function () {
+      setOpen(!sidebar.classList.contains('open'));
+    });
+    overlay.addEventListener('click', function () { setOpen(false); });
+
+    // 点击 sidebar 里的链接后自动关闭
+    sidebar.addEventListener('click', function (e) {
+      var t = e.target;
+      if (t && t.tagName === 'A' && window.matchMedia('(max-width: 833px)').matches) {
+        setOpen(false);
+      }
+    });
+
+    // 窗口变宽后强制关闭抽屉
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 833) setOpen(false);
+    });
+
+    // Esc 关闭
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && sidebar.classList.contains('open')) setOpen(false);
+    });
+  })();
+
+  /* ─── 滚动 reveal 动效 ─── */
+  (function () {
+    var targets = document.querySelectorAll('.doc-header, main section');
+    if (!targets.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      // 老浏览器：直接显示
+      targets.forEach(function (el) { el.classList.add('is-in'); });
+      return;
+    }
+
+    var obs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-in');
+          obs.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.08,
+      rootMargin: '0px 0px -6% 0px'
+    });
+
+    targets.forEach(function (el) { obs.observe(el); });
+  })();
+
+  /* ─── Flow canvas 右滑提示 ─── */
+  (function () {
+    var canvases = document.querySelectorAll('.flow-canvas');
+    if (!canvases.length) return;
+
+    function update(canvas) {
+      var scroller = canvas.querySelector('.flow');
+      if (!scroller) return;
+      var hasOverflow = scroller.scrollWidth > scroller.clientWidth + 2;
+      var atEnd = scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 4;
+      canvas.classList.toggle('has-overflow', hasOverflow);
+      canvas.classList.toggle('at-end', atEnd);
+    }
+
+    function updateAll() {
+      canvases.forEach(update);
+    }
+
+    canvases.forEach(function (canvas) {
+      // 注入提示条
+      if (!canvas.querySelector('.scroll-hint-pill')) {
+        var pill = document.createElement('div');
+        pill.className = 'scroll-hint-pill';
+        pill.setAttribute('aria-hidden', 'true');
+        pill.innerHTML = '<span class="hint-text">右滑查看</span>';
+        canvas.appendChild(pill);
+      }
+      var scroller = canvas.querySelector('.flow');
+      if (scroller) {
+        scroller.addEventListener('scroll', function () { update(canvas); }, { passive: true });
+      }
+    });
+
+    // 字体加载完会改变节点宽度，多次重测
+    window.addEventListener('resize', updateAll);
+    window.addEventListener('load', updateAll);
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(updateAll);
+    }
+    requestAnimationFrame(updateAll);
+    setTimeout(updateAll, 300);
+  })();
+</script>
 
 </body>
 </html>
