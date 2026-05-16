@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>售后标准工作流程</title>
+
+<style>
+  :root {
+    --primary: #0066cc;
+
+    --ink: #1d1d1f;
+    --ink-80: #333333;
+    --ink-48: #6e6e73;
+    --ink-30: #86868b;
+
+    --canvas: #ffffff;
+    --parchment: #f5f5f7;
+    --surface-pearl: #fafafc;
+    --surface-black: #000000;
+
+    --divider: #f0f0f0;
+    --hairline: #e0e0e0;
+    --line: #c7c7cc;
+
+    --r-sm: 8px;
+    --r-md: 11px;
+    --r-lg: 18px;
+    --r-pill: 9999px;
+
+    --s-xs: 8px;
+    --s-sm: 12px;
+    --s-md: 17px;
+    --s-lg: 24px;
+    --s-xl: 32px;
+    --s-xxl: 48px;
+    --s-section: 80px;
+
+    --font-display: "SF Pro Display", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --font-text: "SF Pro Text", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+
+    --sidebar-w: 280px;
+    --content-max: 820px;
+    --nav-h: 44px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-text);
+    font-size: 17px;
+    line-height: 1.47;
+    letter-spacing: -0.374px;
+    color: var(--ink);
+    background: var(--canvas);
+  }
+
+  /* ───────── Global nav ───────── */
+  .global-nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--surface-black);
+    color: #fff;
+    height: var(--nav-h);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+  }
+  .global-nav-brand {
+    font-family: var(--font-text);
+    font-size: 12px;
+    line-height: 1;
+    letter-spacing: -0.12px;
+    color: #fff;
+  }
+
+  /* ───────── Doc layout ───────── */
+  .doc {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr;
+    min-height: calc(100vh - var(--nav-h));
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--parchment);
+    border-right: 1px solid var(--hairline);
+    position: sticky;
+    top: var(--nav-h);
+    height: calc(100vh - var(--nav-h));
+    overflow-y: auto;
+    padding: var(--s-xl) 0 var(--s-xxl) 0;
+  }
+  .sidebar-inner { padding: 0 var(--s-lg); }
+  .doc-brand {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.19;
+    letter-spacing: 0.231px;
+    color: var(--ink);
+  }
+  .doc-version {
+    font-family: var(--font-text);
+    font-size: 12px;
+    line-height: 1.3;
+    letter-spacing: -0.12px;
+    color: var(--ink-48);
+    margin-top: 4px;
+    margin-bottom: var(--s-xl);
+  }
+  .toc { display: flex; flex-direction: column; gap: 1px; }
+  .toc-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin-top: 22px;
+    padding-top: 22px;
+    border-top: 1px solid var(--divider);
+  }
+  .toc a {
+    display: block;
+    padding: 6px 10px;
+    font-family: var(--font-text);
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: -0.224px;
+    color: var(--ink-80);
+    text-decoration: none;
+    border-radius: var(--r-sm);
+    transition: background 0.15s, color 0.15s;
+  }
+  .toc a:hover {
+    background: rgba(0, 0, 0, 0.04);
+    color: var(--ink);
+  }
+  .toc a.sub {
+    padding: 4px 10px 4px 26px;
+    font-size: 13px;
+    color: var(--ink-48);
+    position: relative;
+  }
+  .toc a.sub::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    width: 6px;
+    height: 1px;
+    background: var(--ink-30);
+    opacity: 0.5;
+  }
+  .toc a.sub:hover { color: var(--ink-80); }
+
+  /* Main */
+  .content {
+    padding: var(--s-xxl) var(--s-section);
+  }
+  .content-inner { max-width: var(--content-max); }
+
+  /* ───────── Doc header ───────── */
+  .doc-header {
+    padding-bottom: var(--s-xl);
+    border-bottom: 1px solid var(--hairline);
+    margin-bottom: var(--s-xxl);
+  }
+  .eyebrow {
+    font-family: var(--font-text);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-48);
+    margin-bottom: var(--s-sm);
+  }
+  .doc-header h1 {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+
+  /* ───────── Sections ───────── */
+  section {
+    margin-bottom: var(--s-xxl);
+    scroll-margin-top: calc(var(--nav-h) + 24px);
+  }
+  h2 {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.018em;
+    color: var(--ink);
+    margin-bottom: var(--s-md);
+  }
+  h3 {
+    font-family: var(--font-display);
+    font-size: 21px;
+    font-weight: 600;
+    line-height: 1.24;
+    letter-spacing: -0.005em;
+    color: var(--ink);
+    margin-top: var(--s-xl);
+    margin-bottom: var(--s-sm);
+  }
+  p {
+    font-family: var(--font-text);
+    font-size: 17px;
+    line-height: 1.47;
+    letter-spacing: -0.374px;
+    color: var(--ink-80);
+    margin-bottom: var(--s-sm);
+  }
+  p:last-child { margin-bottom: 0; }
+  strong { font-weight: 600; color: var(--ink); }
+  a { color: var(--primary); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  /* ───────── Flow canvas ───────── */
+  .flow-canvas {
+    margin-top: var(--s-lg);
+    margin-bottom: var(--s-md);
+    background: var(--parchment);
+    border-radius: var(--r-lg);
+    padding: 36px 28px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .flow-canvas::-webkit-scrollbar { height: 8px; }
+  .flow-canvas::-webkit-scrollbar-track { background: transparent; }
+  .flow-canvas::-webkit-scrollbar-thumb { background: var(--hairline); border-radius: 999px; }
+
+  .flow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    min-width: 100%;
+    font-family: var(--font-text);
+  }
+
+  /* Step (node) */
+  .step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 9px 16px;
+    border-radius: var(--r-pill);
+    font-family: var(--font-text);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.35;
+    letter-spacing: -0.2px;
+    background: #fff;
+    color: var(--ink);
+    border: 1px solid var(--hairline);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .step small {
+    color: var(--ink-48);
+    margin-left: 6px;
+    font-size: 12px;
+  }
+  .step--terminal {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+  }
+  .step--decision {
+    border-width: 1.5px;
+    border-color: var(--ink);
+    font-weight: 500;
+  }
+  .step--output {
+    background: var(--parchment);
+    color: var(--ink);
+    border-color: var(--hairline);
+    font-weight: 600;
+  }
+  .step--link {
+    text-decoration: none;
+    color: var(--primary);
+    border-color: var(--hairline);
+    background: #fff;
+    font-weight: 500;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  a.step--link:hover {
+    border-color: var(--primary);
+    color: var(--primary-focus, #0071e3);
+    text-decoration: none;
+  }
+  .step--special {
+    background: var(--ink);
+    color: #fff;
+    border-color: var(--ink);
+    font-weight: 500;
+  }
+  .step--muted {
+    color: var(--ink-48);
+    border-style: dashed;
+  }
+
+  /* Stacked step (multi-line label) */
+  .step--stack {
+    flex-direction: column;
+    padding: 8px 14px;
+    line-height: 1.3;
+  }
+  .step--stack .step-sub {
+    font-size: 11px;
+    color: var(--ink-48);
+    margin-top: 2px;
+  }
+  .step--terminal .step-sub,
+  .step--special .step-sub,
+  .step--output .step-sub { color: rgba(255,255,255,0.72); }
+
+  /* Connector line + arrow */
+  .line {
+    display: inline-block;
+    flex-shrink: 0;
+    width: 28px;
+    height: 1.25px;
+    background: var(--line);
+    position: relative;
+    margin: 0 4px;
+  }
+  .line::after {
+    content: '';
+    position: absolute;
+    right: -1px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 5px solid var(--line);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+  .line--long { width: 40px; }
+  .line--short { width: 18px; }
+  .line--noarrow { width: 18px; }
+  .line--noarrow::after { display: none; }
+
+  /* Branches (vertical stack) */
+  .branches {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
+    position: relative;
+    padding-left: 14px;
+  }
+  .branches::before {
+    /* fork bracket on the left */
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18px;
+    bottom: 18px;
+    width: 1.25px;
+    background: var(--line);
+  }
+  .branches::after {
+    /* tee at the center (connects to the left arrow) */
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 1.25px;
+    background: var(--line);
+  }
+  .branch {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+  }
+  .branch-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-48);
+    min-width: 36px;
+    margin-right: 6px;
+    margin-left: 6px;
+  }
+
+  /* Merge bracket (right of branches) */
+  .branches--merge-right { padding-right: 14px; }
+  .branches--merge-right::before {
+    /* keep left bracket */
+  }
+  .branches--merge-right + .line {
+    /* no styling change here; merge handled by extra ::after on container if needed */
+  }
+  /* Optional right merge bracket - use .merge element instead for clarity */
+
+  /* Merge node: visual representation of branches converging */
+  .merge {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+    position: relative;
+    width: 14px;
+    height: 60px;
+    margin-right: -2px;
+  }
+  .merge::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 10%;
+    bottom: 10%;
+    width: 1.25px;
+    background: var(--line);
+  }
+  .merge::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 1.25px;
+    background: var(--line);
+  }
+  .merge--tall { height: 90px; }
+  .merge--xtall { height: 120px; }
+
+  /* Vertical stack of paths (for complex states) */
+  .paths {
+    display: inline-flex;
+    flex-direction: column;
+    gap: 16px;
+    flex-shrink: 0;
+    position: relative;
+    padding-left: 14px;
+  }
+  .paths::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18px;
+    bottom: 18px;
+    width: 1.25px;
+    background: var(--line);
+  }
+  .paths::after {
+    content: '';
+    position: absolute;
+    left: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 1.25px;
+    background: var(--line);
+  }
+  .path {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+  }
+  .path-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-48);
+    margin-left: 6px;
+    margin-right: 6px;
+    min-width: 64px;
+  }
+  .path-tag--wide { min-width: 90px; }
+
+  /* Caption under flow */
+  .flow-caption {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--ink-48);
+    letter-spacing: -0.224px;
+  }
+
+  /* ───────── Table ───────── */
+  .tbl {
+    margin-top: var(--s-md);
+    margin-bottom: var(--s-md);
+    border: 1px solid var(--hairline);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-text);
+    font-size: 15px;
+    line-height: 1.43;
+    letter-spacing: -0.224px;
+  }
+  th, td {
+    text-align: left;
+    vertical-align: top;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--divider);
+  }
+  tr:last-child td { border-bottom: none; }
+  th {
+    background: var(--parchment);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink-48);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 10px 16px;
+  }
+  td { color: var(--ink-80); }
+  td strong { color: var(--ink); }
+
+  /* ───────── Notice ───────── */
+  .notice {
+    margin-top: var(--s-md);
+    padding: 14px 18px;
+    background: var(--parchment);
+    border-radius: var(--r-md);
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.224px;
+    color: var(--ink-48);
+  }
+
+  /* ───────── Bullet list ───────── */
+  ul.points { list-style: none; margin-top: var(--s-md); }
+  ul.points li {
+    padding: 12px 0;
+    border-top: 1px solid var(--divider);
+    font-family: var(--font-text);
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.224px;
+    color: var(--ink-80);
+  }
+  ul.points li:first-child { border-top: none; }
+
+  /* ───────── Responsive ───────── */
+  @media (max-width: 1024px) {
+    .doc { grid-template-columns: 240px 1fr; }
+    .content { padding: var(--s-xl) var(--s-xxl); }
+  }
+  @media (max-width: 833px) {
+    :root { --sidebar-w: 100%; }
+    .doc { grid-template-columns: 1fr; }
+    .sidebar {
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--hairline);
+      padding: var(--s-lg) 0;
+    }
+    .content { padding: var(--s-xl) var(--s-lg); }
+    .flow-canvas { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="global-nav">
+  <span class="global-nav-brand">售后 SOP · 内部文档</span>
+</nav>
+
+<div class="doc">
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+      <div class="doc-brand">售后 SOP</div>
+      <div class="doc-version">v2 · 2026-05</div>
+
+      <nav class="toc">
+        <a href="#overview">整体流程</a>
+
+        <div class="toc-group">
+          <a href="#before">调货前</a>
+          <a href="#after">调货后</a>
+          <a href="#after-states" class="sub">五种状态</a>
+          <a href="#after-main" class="sub">主流程</a>
+          <a href="#after-judge" class="sub">回仓判定</a>
+          <a href="#shipped">发货后</a>
+        </div>
+
+        <div class="toc-group">
+          <a href="#rule-release">库存释放</a>
+          <a href="#rule-residual">剩货记录单</a>
+          <a href="#rule-time">单据生成时点</a>
+          <a href="#rule-confusing">容易混的点</a>
+        </div>
+      </nav>
+    </div>
+  </aside>
+
+  <main class="content">
+    <div class="content-inner">
+
+      <header class="doc-header">
+        <div class="eyebrow">订单管理 · 售后</div>
+        <h1>售后标准工作流程</h1>
+      </header>
+
+      <!-- 整体流程 -->
+      <section id="overview">
+        <h2>整体流程</h2>
+        <p>退换货工单的外部可观察步骤有四步：填写申请、管家审批、业务审批、工单结束。</p>
+        <p>业务审批通过的那一刻，按订单当前阶段走以下三条路径之一。</p>
+
+        <div class="flow-canvas">
+          <div class="flow">
+            <span class="step step--terminal">填写申请</span>
+            <span class="line"></span>
+            <span class="step">管家二次联系审批</span>
+            <span class="line"></span>
+            <span class="step step--decision">业务审批</span>
+
+            <div class="branches">
+              <div class="branch">
+                <span class="branch-label">不通过</span>
+                <span class="line line--long"></span>
+              </div>
+              <div class="branch">
+                <span class="branch-label">通过</span>
+                <span class="line"></span>
+                <span class="step step--decision">阶段</span>
+                <span class="line line--short"></span>
+                <div class="branches">
+                  <div class="branch"><a href="#before" class="step step--link">调货前</a></div>
+                  <div class="branch"><a href="#after" class="step step--link">调货后</a></div>
+                  <div class="branch"><a href="#shipped" class="step step--link">发货后</a></div>
+                </div>
+              </div>
+            </div>
+
+            <span class="merge merge--tall"></span>
+            <span class="step step--terminal">工单结束</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 调货前 -->
+      <section id="before">
+        <h2>调货前</h2>
+        <p>订单尚未占用任何库存，处理最简单。</p>
+
+        <div class="flow-canvas">
+          <div class="flow">
+            <span class="step step--terminal">业务通过</span>
+            <span class="line"></span>
+            <span class="step step--decision">退款 / 换货</span>
+
+            <div class="branches">
+              <div class="branch">
+                <span class="branch-label">退款</span>
+                <span class="line"></span>
+                <span class="step">修改原订单状态</span>
+                <span class="line"></span>
+                <span class="step step--output">生成退款单</span>
+              </div>
+              <div class="branch">
+                <span class="branch-label">换货</span>
+                <span class="line"></span>
+                <span class="step step--stack">
+                  <span>修改原订单状态</span>
+                  <span class="step-sub">例：尺码 130 → 140</span>
+                </span>
+              </div>
+            </div>
+
+            <span class="merge"></span>
+            <span class="step step--terminal">工单结束</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 调货后 -->
+      <section id="after">
+        <h2>调货后</h2>
+        <p>订单已经过快速库存判定，处于以下五种状态之一。</p>
+
+        <h3 id="after-states">五种状态</h3>
+        <p>状态差异由「指定发货仓库 / 移仓明细 / 拆换标备注 / 入库明细」四个字段共同决定。</p>
+
+        <div class="tbl">
+          <table>
+            <thead>
+              <tr>
+                <th>编号</th><th>状态</th><th>指定发货仓库</th><th>移仓明细</th><th>拆换标</th><th>入库明细</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>①</td><td>大仓直接锁库存</td><td>空</td><td>—</td><td>—</td><td>—</td></tr>
+              <tr><td>②</td><td>非大仓锁库存</td><td>学校仓</td><td>✓</td><td>—</td><td>—</td></tr>
+              <tr><td>③</td><td>大仓拆换标锁库存</td><td>空</td><td>—</td><td>✓</td><td>✓</td></tr>
+              <tr><td>④</td><td>非大仓拆换标锁库存</td><td>学校仓</td><td>✓</td><td>✓</td><td>—</td></tr>
+              <tr><td>⑤</td><td>库存不足调货中</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 id="after-main">主流程</h3>
+
+        <div class="flow-canvas">
+          <div class="flow">
+            <span class="step step--terminal">业务通过</span>
+            <span class="line"></span>
+            <span class="step step--decision">当前库存状态</span>
+
+            <div class="paths">
+              <div class="path">
+                <span class="path-tag">① / ③</span>
+                <span class="line"></span>
+                <span class="step">释放到大仓</span>
+                <span class="line"></span>
+                <span class="step step--stack">
+                  <span>生成剩货记录单</span>
+                  <span class="step-sub">锁库存区取出重新上架</span>
+                </span>
+              </div>
+              <div class="path">
+                <span class="path-tag">⑤</span>
+                <span class="line"></span>
+                <span class="step">不释放</span>
+                <span class="line"></span>
+                <span class="step step--stack">
+                  <span>生成剩货记录单</span>
+                  <span class="step-sub">调货到货后取出上架</span>
+                </span>
+              </div>
+              <div class="path">
+                <span class="path-tag">② / ④</span>
+                <span class="line"></span>
+                <span class="step step--special">跳转 · 回仓判定</span>
+              </div>
+            </div>
+
+            <span class="merge merge--tall"></span>
+            <span class="step step--decision">退款 / 换货</span>
+
+            <div class="branches">
+              <div class="branch">
+                <span class="branch-label">退款</span>
+                <span class="line"></span>
+                <span class="step step--output">改状态 + 生成退款单</span>
+              </div>
+              <div class="branch">
+                <span class="branch-label">换货</span>
+                <span class="line"></span>
+                <span class="step">修改原订单状态</span>
+              </div>
+            </div>
+
+            <span class="merge"></span>
+            <span class="step step--terminal">工单结束</span>
+          </div>
+        </div>
+
+        <h3 id="after-judge">回仓判定 · 子流程</h3>
+        <p>仅针对 ② / ④ 触发。系统默认把库存释放到大仓，但这两种状态的库存原本来自学校仓——若货物还没发到大仓，统一释放会让学校仓账实不符。</p>
+
+        <div class="flow-canvas">
+          <div class="flow">
+            <span class="step step--terminal">触发 · ② / ④</span>
+            <span class="line"></span>
+            <span class="step step--stack">
+              <span>弹窗</span>
+              <span class="step-sub">货物是否已从学校仓发至大仓</span>
+            </span>
+            <span class="line"></span>
+            <span class="step step--muted">参考依据</span>
+            <span class="line"></span>
+            <span class="step step--decision">审核人选择</span>
+
+            <div class="branches">
+              <div class="branch">
+                <span class="branch-label">未发</span>
+                <span class="line"></span>
+                <span class="step">释放到大仓</span>
+                <span class="line"></span>
+                <span class="step step--output">生成虚拟移仓单</span>
+                <span class="line"></span>
+                <span class="step step--stack">
+                  <span>库存位置</span>
+                  <span class="step-sub">学校仓</span>
+                </span>
+              </div>
+              <div class="branch">
+                <span class="branch-label">已发</span>
+                <span class="line"></span>
+                <span class="step">释放到大仓</span>
+                <span class="line"></span>
+                <span class="step step--stack">
+                  <span>库存位置</span>
+                  <span class="step-sub">大仓</span>
+                </span>
+              </div>
+            </div>
+
+            <span class="merge"></span>
+            <span class="step step--terminal">返回主流程</span>
+          </div>
+        </div>
+
+        <h3>审核参考依据</h3>
+        <div class="tbl">
+          <table>
+            <thead>
+              <tr><th>信号</th><th>未发</th><th>已发</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>移仓单状态</td><td>待发出</td><td>已签收</td></tr>
+              <tr><td>大仓入库记录</td><td>无</td><td>有</td></tr>
+              <tr><td>学校仓当前库存</td><td>&gt; 0</td><td>= 0</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>虚拟移仓单字段</h3>
+        <p>仅在「未发」时生成。</p>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>字段</th><th>取值</th></tr></thead>
+            <tbody>
+              <tr><td>移出仓库</td><td>大仓</td></tr>
+              <tr><td>移入仓库</td><td>原单「指定发货仓库」</td></tr>
+              <tr><td>SKU / 数量</td><td>退换货明细</td></tr>
+              <tr><td>备注</td><td>退换货自动回库_单号_判断人_时间</td></tr>
+              <tr><td>状态</td><td>直接完成</td></tr>
+              <tr><td>标识</td><td>虚拟移仓</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="notice">虚拟移仓单只调整账面库存，不产生实际物流。</div>
+      </section>
+
+      <!-- 发货后 -->
+      <section id="shipped">
+        <h2>发货后</h2>
+        <p>审批角色由业务转交仓库。必须实物收回并入库后才能审批通过。</p>
+
+        <div class="flow-canvas">
+          <div class="flow">
+            <span class="step step--terminal">业务通过 · 转仓库</span>
+            <span class="line"></span>
+            <span class="step">仓库拆快递核对</span>
+            <span class="line"></span>
+            <span class="step step--stack">
+              <span>系统自动核对申请</span>
+              <span class="step-sub">快递单号 + 款号匹配</span>
+            </span>
+            <span class="line"></span>
+            <span class="step">仓库做入库单</span>
+            <span class="line"></span>
+            <span class="step step--decision">仓库审批</span>
+
+            <div class="branches">
+              <div class="branch">
+                <span class="branch-label">退款</span>
+                <span class="line"></span>
+                <span class="step step--output">生成退款单</span>
+              </div>
+              <div class="branch">
+                <span class="branch-label">换货</span>
+                <span class="line"></span>
+                <span class="step step--output">生成新售后出库明细单</span>
+              </div>
+            </div>
+
+            <span class="merge"></span>
+            <span class="step step--terminal">工单结束</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 关键规则 -->
+      <section id="rule-release">
+        <h2>关键规则</h2>
+
+        <h3>库存释放</h3>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>阶段 / 状态</th><th>业务审核通过后释放</th></tr></thead>
+            <tbody>
+              <tr><td>调货前</td><td>—  本就没占用</td></tr>
+              <tr><td>① 大仓直接锁库存</td><td>✅ 释放到大仓</td></tr>
+              <tr><td>② 非大仓锁库存</td><td>✅ 经回仓判定决定</td></tr>
+              <tr><td>③ 大仓拆换标锁库存</td><td>✅ 释放到大仓</td></tr>
+              <tr><td>④ 非大仓拆换标锁库存</td><td>✅ 经回仓判定决定</td></tr>
+              <tr><td>⑤ 库存不足调货中</td><td>❌ 不释放</td></tr>
+              <tr><td>发货后</td><td>❌ 不释放，<strong>库存恢复靠仓库入库单</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="rule-residual">
+        <h3>剩货记录单</h3>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>状态</th><th>是否生成</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td>① 大仓直接锁库存</td><td>✅</td><td>锁库存区的货发生退换，取出重新上架</td></tr>
+              <tr><td>③ 大仓拆换标锁库存</td><td>✅</td><td>同 ①</td></tr>
+              <tr><td>⑤ 库存不足调货中</td><td>✅</td><td>调货批次到货后取出上架，不要放进锁库存区</td></tr>
+              <tr><td>② 非大仓锁库存</td><td>❌</td><td>由业务通过回仓判定单独处理</td></tr>
+              <tr><td>④ 非大仓拆换标锁库存</td><td>❌</td><td>由业务通过回仓判定单独处理</td></tr>
+              <tr><td>调货前 / 发货后</td><td>❌</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="rule-time">
+        <h3>单据生成时点</h3>
+        <div class="tbl">
+          <table>
+            <thead><tr><th>单据</th><th>生成时点</th></tr></thead>
+            <tbody>
+              <tr><td>退款单（调货前 / 调货后）</td><td>业务审核通过时</td></tr>
+              <tr><td>退款单（发货后）</td><td>仓库审批通过时</td></tr>
+              <tr><td>新售后出库明细单</td><td>仅发货后换货生成，仓库审批通过时</td></tr>
+              <tr><td>剩货记录单</td><td>调货后业务审核通过时</td></tr>
+              <tr><td>虚拟移仓单</td><td>② / ④ 且回仓判定「未发」时</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="rule-confusing">
+        <h3>容易混的点</h3>
+        <ul class="points">
+          <li>管家二次联系审批是<strong>强制</strong>的，无论家长还是内部填写都要走。</li>
+          <li>调货前 / 调货后的<strong>换货不生成新出库单</strong>，只修改原订单状态。</li>
+          <li>发货后退换货的<strong>"业务审批"由仓库承担</strong>，原因是必须先确认实物入库。</li>
+          <li>业务审核通过<strong>不会释放发货后的库存</strong>，库存恢复完全靠仓库做入库单。</li>
+        </ul>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+</body>
+</html>
